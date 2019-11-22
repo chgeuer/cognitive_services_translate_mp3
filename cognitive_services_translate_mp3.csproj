@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp3.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CognitiveServices.Speech" Version="1.8.0" />
+    <PackageReference Include="NAudio" Version="1.9.0" />
+    <PackageReference Include="T4Include" Version="1.1.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Include_T4Include.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>Include_T4Include.cs</LastGenOutput>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Include_T4Include.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Include_T4Include.tt</DependentUpon>
+    </Compile>
+  </ItemGroup>
+</Project>

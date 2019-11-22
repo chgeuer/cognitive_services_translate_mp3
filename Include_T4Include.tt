@@ -1,0 +1,9 @@
+﻿<#
+    RootPath    = @"https://raw.github.com/";
+    Namespace   = "";
+    Includes    = new []
+        {
+			Include (@"https://raw.githubusercontent.com/Azure-Samples/cognitive-services-speech-sdk/master/samples/csharp/sharedcontent/console/helper.cs", noOuterNamespace:true),
+        };
+#>
+<#@ include file="C:\Users\chgeuer\.nuget\packages\t4include\1.1.4\T4\IncludeWebFile.ttinclude" #>
