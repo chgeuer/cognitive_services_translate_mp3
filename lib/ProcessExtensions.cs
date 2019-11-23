@@ -15,23 +15,26 @@
             public int? ExitCode { get; set; }
         }
 
-        public static Task<ProcessResult> RunAsync(string filename, string arguments)
+        public static Task<ProcessResult> RunAsync(string filename, string arguments, Stream stdinStream)
         {
             var processStartInfo = new ProcessStartInfo
             {
                 FileName = filename,
                 Arguments = arguments,
+                RedirectStandardInput = stdinStream != null && stdinStream.CanRead,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 UseShellExecute = false,
                 CreateNoWindow = true
             };
-            return processStartInfo.RunAsync();
+            return processStartInfo.RunAsync(stdinStream);
         }
 
-        public static Task<ProcessResult> RunAsync(this ProcessStartInfo startInfo) => startInfo.RunAsync(TimeSpan.Zero);
+        public static Task<ProcessResult> RunAsync(this ProcessStartInfo startInfo, Stream stdinStream) => 
+            startInfo.RunAsync(TimeSpan.Zero, stdinStream);
 
-        public static async Task<ProcessResult> RunAsync(this ProcessStartInfo startInfo, TimeSpan timeout)
+        public static async Task<ProcessResult> RunAsync(this ProcessStartInfo startInfo, 
+            TimeSpan timeout, Stream stdinStream)
         {
             using var stdout = new MemoryStream();
             using var stderr = new MemoryStream();
@@ -50,6 +53,10 @@
             if (!startSuccess)
             {
                 return new ProcessResult { Stdout = stdout.ToArray(), Stderr = stderr.ToArray(), ExitCode = process.ExitCode };
+            }
+            if (process.StartInfo.RedirectStandardInput && stdinStream != null && stdinStream.CanRead)
+            {
+                tasks.Add(stdinStream.CopyToAndCloseAsync(process.StandardInput.BaseStream));
             }
             if (process.StartInfo.RedirectStandardOutput)
             {

@@ -17,19 +17,18 @@
         const int audio_bit_per_sample = 16;
         const int audio_channels = 1;
 
-        public static Task<byte[]> ConvertMP3(this byte[] mp3Bytes, Mp3ConversionAlgorithm algo)
+        public static Task<byte[]> ConvertMP3(this Stream mp3Stream, Mp3ConversionAlgorithm algo)
         {
             return algo switch
             {
-                Mp3ConversionAlgorithm.NAudio => Task.FromResult(mp3Bytes.ConvertMP3_NAudio()),
-                Mp3ConversionAlgorithm.FFMPEG => mp3Bytes.ConvertMP3_FFMPEG(),
+                Mp3ConversionAlgorithm.NAudio => Task.FromResult(mp3Stream.ConvertMP3_NAudio()),
+                Mp3ConversionAlgorithm.FFMPEG => mp3Stream.ConvertMP3_FFMPEG(),
                 _ => throw new ArgumentException($"Unknown MP3-to-WAV algorithm {algo}", paramName: nameof(algo)),
             };
         }
 
-        private static byte[] ConvertMP3_NAudio(this byte[] mp3Bytes)
+        private static byte[] ConvertMP3_NAudio(this Stream mp3Stream)
         {
-            using var mp3Stream = new MemoryStream(mp3Bytes);
             using var reader = new Mp3FileReader(mp3Stream);
             using var resampled = new WaveFormatConversionStream(
                 new WaveFormat(
@@ -42,7 +41,7 @@
             return wavStream.ToArray();
         }
 
-        private static async Task<byte[]> ConvertMP3_FFMPEG(this byte[] mp3Bytes)
+        private static async Task<byte[]> ConvertMP3_FFMPEG(this Stream mp3Stream)
         {
             var audio_codec = audio_bit_per_sample switch
             {
@@ -58,7 +57,7 @@
             string writeToStdout = "-";
             string ffmpeg_args = $"{readFromStdin} {produceWAV} {audioParams} {writeToStdout}";
 
-            var result = await ProcessExtensions.RunAsync("ffmpeg", ffmpeg_args);
+            var result = await ProcessExtensions.RunAsync("ffmpeg", ffmpeg_args, mp3Stream);
             return result.Stdout.TweakWavLength();
         }
 

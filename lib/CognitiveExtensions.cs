@@ -10,10 +10,10 @@
 
     public static class CognitiveExtensions
     {
-        public static async Task Translate(byte[] mp3Bytes, string subscriptionKey, string region, string outputFilename, Mp3ConversionAlgorithm algo)
+        public static async Task Translate(Stream mp3stream, string subscriptionKey, string region, string outputFilename, Mp3ConversionAlgorithm algo)
         {
             var config = SpeechTranslationConfig.FromSubscription(subscriptionKey, region);
-            var wavBytes = await mp3Bytes.ConvertMP3(algo);
+            var wavBytes = await mp3stream.ConvertMP3(algo);
             await config.TranslationWithFileAsync(wavBytes, outputFilename);
         }
 
