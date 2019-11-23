@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
-    <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp3.0</TargetFramework>
   </PropertyGroup>
 
@@ -11,9 +11,17 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Update="Include_T4Include.cs">
+      <DependentUpon>Include_T4Include.tt</DependentUpon>
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
     <None Update="Include_T4Include.tt">
-      <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>Include_T4Include.cs</LastGenOutput>
+      <Generator>TextTemplatingFileGenerator</Generator>
     </None>
   </ItemGroup>
 
@@ -21,11 +29,4 @@
     <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Compile Update="Include_T4Include.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Include_T4Include.tt</DependentUpon>
-    </Compile>
-  </ItemGroup>
 </Project>

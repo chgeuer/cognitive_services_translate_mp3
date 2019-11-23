@@ -229,7 +229,7 @@ namespace Include
     static partial class MetaData
     {
         public const string RootPath        = @"https://raw.github.com/";
-        public const string IncludeDate     = @"2019-11-22T17:40:32";
+        public const string IncludeDate     = @"2019-11-23T17:20:29";
 
         public const string Include_0       = @"https://raw.githubusercontent.com/Azure-Samples/cognitive-services-speech-sdk/master/samples/csharp/sharedcontent/console/helper.cs";
     }

@@ -1,4 +1,4 @@
-﻿namespace Translate
+﻿namespace lib
 {
     using System;
     using System.IO;
@@ -8,28 +8,16 @@
     using Microsoft.CognitiveServices.Speech.Translation;
     using MicrosoftSpeechSDKSamples;
 
-    class Program
+    public static class CognitiveExtensions
     {
-        static async Task Main(string[] _args)
+        public static async Task Translate(byte[] mp3Bytes, string subscriptionKey, string region, string outputFilename, Mp3ConversionAlgorithm algo)
         {
-            static string f(string n) => Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), 
-                "Soundaufnahmen", n);
-
-            var inputMP3 = f("input.mp3");
-
-            var mp3Bytes = await File.ReadAllBytesAsync(inputMP3);
-            var wavBytes = mp3Bytes.ConvertMP3_NAudio();
-
-            await TranslationWithFileAsync(
-                SpeechTranslationConfig.FromSubscription(
-                    subscriptionKey: Environment.GetEnvironmentVariable("SPEECH_API_KEY"), // "jlkjkljljlkj"
-                    region: Environment.GetEnvironmentVariable("SPEECH_API_REGION")), // "northeurope"
-                wavBytes: wavBytes,
-                outputFilename: f("translated.wav"));
+            var config = SpeechTranslationConfig.FromSubscription(subscriptionKey, region);
+            var wavBytes = await mp3Bytes.ConvertMP3(algo);
+            await config.TranslationWithFileAsync(wavBytes, outputFilename);
         }
 
-        public static async Task TranslationWithFileAsync(SpeechTranslationConfig config, byte[] wavBytes, string outputFilename)
+        public static async Task TranslationWithFileAsync(this SpeechTranslationConfig config, byte[] wavBytes, string outputFilename)
         {
             const string fromLanguage = "en-US";
             config.SpeechRecognitionLanguage = fromLanguage;
@@ -112,6 +100,15 @@
 
             // Stops translation.
             await recognizer.StopContinuousRecognitionAsync().ConfigureAwait(false);
+        }
+
+        public static void OnSynthesisWriteToFile(this TranslationRecognizer recognizer, string filename)
+        {
+            recognizer.Synthesizing += (s, e) => {
+                byte[] audioBytes = e.Result.GetAudio();
+                using var fs = File.OpenWrite(filename);
+                fs.Write(audioBytes, 0, audioBytes.Length);
+            };
         }
     }
 }
