@@ -13,6 +13,10 @@
 
     public static class SoundExtensions
     {
+        const int audio_sample_rate = 16000;
+        const int audio_bit_per_sample = 16;
+        const int audio_channels = 1;
+
         public static Task<byte[]> ConvertMP3(this byte[] mp3Bytes, Mp3ConversionAlgorithm algo)
         {
             return algo switch
@@ -25,32 +29,56 @@
 
         private static byte[] ConvertMP3_NAudio(this byte[] mp3Bytes)
         {
-            var waveFormat = new WaveFormat(rate: 16000, bits: 16, channels: 1);
             using var mp3Stream = new MemoryStream(mp3Bytes);
             using var reader = new Mp3FileReader(mp3Stream);
-            using var resampler = new WaveFormatConversionStream(waveFormat, reader);
+            using var resampled = new WaveFormatConversionStream(
+                new WaveFormat(
+                    rate: audio_sample_rate,
+                    bits: audio_bit_per_sample,
+                    channels: audio_channels), 
+                reader);
             using var wavStream = new MemoryStream();
-            WaveFileWriter.WriteWavFileToStream(wavStream, resampler);
+            WaveFileWriter.WriteWavFileToStream(wavStream, resampled);
             return wavStream.ToArray();
         }
 
         private static async Task<byte[]> ConvertMP3_FFMPEG(this byte[] mp3Bytes)
         {
-            var result = await ProcessExtensions.RunAsync(
-                filename: "ffmpeg",
-                arguments: $"-i - -f wav -c:a pcm_s16le -ar 16000 -ac 1 -");
-            return result.Stdout.TweakWavLengthInMemory();
+            var audio_codec = audio_bit_per_sample switch
+            {
+                16 => "pcm_s16le",
+                _ => throw new ArgumentException(
+                    $"Unsupported bits_per_sample {audio_bit_per_sample}",
+                    paramName: nameof(audio_bit_per_sample)),
+            };
+
+            string readFromStdin = "-i -";
+            string produceWAV = $"-f wav -c:a {audio_codec}";
+            string audioParams = $"-ar {audio_sample_rate} -ac {audio_channels}";
+            string writeToStdout = "-";
+            string ffmpeg_args = $"{readFromStdin} {produceWAV} {audioParams} {writeToStdout}";
+
+            var result = await ProcessExtensions.RunAsync("ffmpeg", ffmpeg_args);
+            return result.Stdout.TweakWavLength();
         }
 
-        private static byte[] TweakWavLengthInMemory(this byte[] wavByteArray)
+        private static byte[] CloneArray(this byte[] array)
+        {
+            byte[] result = new byte[array.Length];
+            Buffer.BlockCopy(array, 0, result, 0, array.Length * sizeof(byte));
+            return result;
+        }
+
+        private static byte[] TweakWavLength(this byte[] wavByteArray)
         {
             // un-fuck the WAV length...
             // mplayer.exe -demuxer rawaudio -rawaudio rate=16000:channels=1:samplesize=2 -ao pcm out.wav
-            // This modifies wavByteArray in memory
+            var bytes = wavByteArray.CloneArray();
+            var byteLength = bytes.Length;
             void tweak(int index, int rotate, long subtractionOffset)
             {
-                var length = wavByteArray.Length - subtractionOffset;
-                wavByteArray[index] = (byte)((length >> (rotate * 8)) & 0xff);
+                var length = byteLength - subtractionOffset;
+                bytes[index] = (byte)((length >> (rotate * 8)) & 0xff);
             }
             void patchLong(int startIndex, long subtractionOffset)
             {
@@ -63,7 +91,7 @@
             patchLong(0x04, 8);
             patchLong(0x74, 120);
 
-            return wavByteArray;
+            return bytes;
         }
     }
 }
