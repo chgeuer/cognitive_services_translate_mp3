@@ -33,8 +33,7 @@
         public static Task<ProcessResult> RunAsync(this ProcessStartInfo startInfo, Stream stdinStream) => 
             startInfo.RunAsync(TimeSpan.Zero, stdinStream);
 
-        public static async Task<ProcessResult> RunAsync(this ProcessStartInfo startInfo, 
-            TimeSpan timeout, Stream stdinStream)
+        public static async Task<ProcessResult> RunAsync(this ProcessStartInfo startInfo, TimeSpan timeout, Stream stdinStream)
         {
             using var stdout = new MemoryStream();
             using var stderr = new MemoryStream();

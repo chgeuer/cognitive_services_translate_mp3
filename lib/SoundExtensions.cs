@@ -2,15 +2,8 @@
 {
     using System;
     using System.IO;
-    using System.Threading.Tasks;
     using NAudio.MediaFoundation;
     using NAudio.Wave;
-
-    public enum Mp3ConversionAlgorithm
-    {
-        NAudio = 0,
-        FFMPEG = 1
-    }
 
     public static class SoundExtensions
     {
@@ -19,17 +12,7 @@
         const int audio_channels = 1;
         const int desiredMP3bitRate = 48000;
 
-        public static Task<byte[]> ConvertMP3(this Stream mp3Stream, Mp3ConversionAlgorithm algo)
-        {
-            return algo switch
-            {
-                Mp3ConversionAlgorithm.NAudio => Task.FromResult(mp3Stream.ConvertMP3_NAudio()),
-                Mp3ConversionAlgorithm.FFMPEG => mp3Stream.ConvertMP3_FFMPEG(),
-                _ => throw new ArgumentException($"Unknown MP3-to-WAV algorithm {algo}", paramName: nameof(algo)),
-            };
-        }
-
-        private static byte[] ConvertMP3_NAudio(this Stream mp3Stream)
+        public static byte[] ConvertMP3(this Stream mp3Stream)
         {
             using var reader = new Mp3FileReader(mp3Stream);
             using var resampled = new WaveFormatConversionStream(
@@ -43,15 +26,14 @@
             return wavStream.ToArray();
         }
 
-        public static async Task<byte[]> ConvertWAV2MP3_NAudio(this Stream wavStream)
+        public static void SaveWavToMp3File(this Stream wavStream, string mp3ResultFile)
         {
-            var tmpFile = Path.GetTempFileName() + ".mp3";
             MediaFoundationApi.Startup();
             try
             {
                 using var reader = new WaveFileReader(inputStream: wavStream);
 
-                //MediaFoundationEncoder.EncodeToMp3(reader, outputFile: tmpFile, desiredBitRate: desiredMP3bitRate);
+                //MediaFoundationEncoder.EncodeToMp3(reader, outputFile: mp3ResultFile, desiredBitRate: desiredMP3bitRate);
 
                 var mediaType = MediaFoundationEncoder.SelectMediaType(
                     AudioSubtypes.MFAudioFormat_MP3, 
@@ -62,58 +44,55 @@
                     throw new NotSupportedException();
                 }
                 using var enc = new MediaFoundationEncoder(mediaType);
-                enc.Encode(outputFile: tmpFile, reader);
-
-                var result = await File.ReadAllBytesAsync(tmpFile);
-                return result;
+                enc.Encode(outputFile: mp3ResultFile, reader);
             }
             finally
             {
                 MediaFoundationApi.Shutdown();
-                try { File.Delete(tmpFile); } catch (Exception) { }
             }
         }
 
-        private static async Task<byte[]> ConvertMP3_FFMPEG(this Stream mp3Stream)
-        {
-            var audio_codec = audio_bit_per_sample switch
-            {
-                16 => "pcm_s16le",
-                _ => throw new ArgumentException(
-                    $"Unsupported bits_per_sample {audio_bit_per_sample}",
-                    paramName: nameof(audio_bit_per_sample)),
-            };
+        #region FFMPEG fragments
+        //private static async Task<byte[]> ConvertMP3_FFMPEG(this Stream mp3Stream)
+        //{
+        //    var audio_codec = audio_bit_per_sample switch
+        //    {
+        //        16 => "pcm_s16le",
+        //        _ => throw new ArgumentException(
+        //            $"Unsupported bits_per_sample {audio_bit_per_sample}",
+        //            paramName: nameof(audio_bit_per_sample)),
+        //    };
 
-            string readFromStdin = "-i -";
-            string produceWAV = $"-f wav -c:a {audio_codec}";
-            string audioParams = $"-ar {audio_sample_rate} -ac {audio_channels}";
-            string writeToStdout = "-";
-            string ffmpeg_args = $"{readFromStdin} {produceWAV} {audioParams} {writeToStdout}";
+        //    string readFromStdin = "-i -";
+        //    string produceWAV = $"-f wav -c:a {audio_codec}";
+        //    string audioParams = $"-ar {audio_sample_rate} -ac {audio_channels}";
+        //    string writeToStdout = "-";
+        //    string ffmpeg_args = $"{readFromStdin} {produceWAV} {audioParams} {writeToStdout}";
 
-            var result = await ProcessExtensions.RunAsync("ffmpeg", ffmpeg_args, mp3Stream);
-            var log = System.Text.Encoding.UTF8.GetString(result.Stderr);
+        //    var result = await ProcessExtensions.RunAsync("ffmpeg", ffmpeg_args, mp3Stream);
+        //    var log = System.Text.Encoding.UTF8.GetString(result.Stderr);
 
-            return result.Stdout; // .TweakWavLength();
-        }
+        //    return result.Stdout; // .TweakWavLength();
+        //}
 
-        private static async Task<byte[]> ConvertWAV2MP3_FFMPEG(this Stream stream)
-        {
-            var audio_codec = "mp3";
-            string readFromStdin = "-i -";
-            string produceMP3 = $"-c:a {audio_codec}";
-            string writeToStdout = "-";
-            string ffmpeg_args = $"{readFromStdin} {produceMP3} {writeToStdout}";
-            var result = await ProcessExtensions.RunAsync("ffmpeg", ffmpeg_args, stream);
-            var log = System.Text.Encoding.UTF8.GetString(result.Stderr);
-            return result.Stdout;
-        }
+        //private static async Task<byte[]> ConvertWAV2MP3_FFMPEG(this Stream stream)
+        //{
+        //    var audio_codec = "mp3";
+        //    string readFromStdin = "-i -";
+        //    string produceMP3 = $"-c:a {audio_codec}";
+        //    string writeToStdout = "-";
+        //    string ffmpeg_args = $"{readFromStdin} {produceMP3} {writeToStdout}";
+        //    var result = await ProcessExtensions.RunAsync("ffmpeg", ffmpeg_args, stream);
+        //    var log = System.Text.Encoding.UTF8.GetString(result.Stderr);
+        //    return result.Stdout;
+        //}
 
-        private static byte[] CloneArray(this byte[] array)
-        {
-            byte[] result = new byte[array.Length];
-            Buffer.BlockCopy(array, 0, result, 0, array.Length * sizeof(byte));
-            return result;
-        }
+        //private static byte[] CloneArray(this byte[] array)
+        //{
+        //    byte[] result = new byte[array.Length];
+        //    Buffer.BlockCopy(array, 0, result, 0, array.Length * sizeof(byte));
+        //    return result;
+        //}
 
         //private static byte[] TweakWavLength(this byte[] wavByteArray)
         //{
@@ -137,5 +116,6 @@
         //    patchLong(0x74, 120);
         //    return bytes;
         //}
+        #endregion
     }
 }

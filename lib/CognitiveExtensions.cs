@@ -1,7 +1,9 @@
 ﻿namespace lib
 {
     using System;
+    using System.Collections.Generic;
     using System.IO;
+    using System.Linq;
     using System.Threading.Tasks;
     using Microsoft.CognitiveServices.Speech;
     using Microsoft.CognitiveServices.Speech.Audio;
@@ -10,24 +12,35 @@
 
     public static class CognitiveExtensions
     {
-        public static async Task Translate(Stream mp3stream, string subscriptionKey, string region, string outputFilename, Mp3ConversionAlgorithm algo)
+        private static async Task<byte[]> GetWAVFromFile(string inputFilename)
         {
-            var config = SpeechTranslationConfig.FromSubscription(subscriptionKey, region);
-            var wavBytes = await mp3stream.ConvertMP3(algo);
-            await config.TranslationWithFileAsync(wavBytes, outputFilename);
+            if (!inputFilename.EndsWith(".wav") && !inputFilename.EndsWith(".mp3")) { throw new ArgumentOutOfRangeException(paramName: nameof(inputFilename), message: "Input filename must have '.wav' or '.mp3' extension"); }
+            if (inputFilename.EndsWith(".wav"))
+            {
+                return await File.ReadAllBytesAsync(inputFilename);
+            }
+            else
+            {
+                var mp3bytes = await File.ReadAllBytesAsync(inputFilename);
+                using var mp3stream = new MemoryStream(mp3bytes);
+                return mp3stream.ConvertMP3();
+            }
         }
 
-        public static async Task TranslationWithFileAsync(this SpeechTranslationConfig config, byte[] wavBytes, string outputFilename)
+        public static async Task Translate(string subscriptionKey, string region, string inputFilename, string fromLanguage,  IEnumerable<string> targetLanguages, Voice voice, string outputFilename)
         {
-            const string fromLanguage = "en-US";
-            config.SpeechRecognitionLanguage = fromLanguage;
-            // https://docs.microsoft.com/en-us/azure/cognitive-services/speech-service/language-support
-            config.VoiceName = "Microsoft Server Speech Text to Speech Voice (de-DE, Stefan, Apollo)";
-            config.AddTargetLanguage("de");
-            config.AddTargetLanguage("fr");
-            config.AddTargetLanguage("en");
+            if (!outputFilename.EndsWith(".wav") && !outputFilename.EndsWith(".mp3")) { throw new ArgumentOutOfRangeException(paramName: nameof(outputFilename), message: "Output filename must have '.wav' or '.mp3' extension"); }
 
-            var stopTranslation = new TaskCompletionSource<int>();
+            var config = SpeechTranslationConfig.FromSubscription(subscriptionKey, region);
+            var wavBytes = await GetWAVFromFile(inputFilename);
+            await config.TranslationWithFileAsync(wavBytes, fromLanguage, targetLanguages, voice, outputFilename);
+        }
+
+        public static async Task TranslationWithFileAsync(this SpeechTranslationConfig config, byte[] wavBytes, string fromLanguage, IEnumerable<string> targetLanguages, Voice voice, string outputFilename)
+        {
+            config.SpeechRecognitionLanguage = fromLanguage;
+            config.VoiceName = voice.ToString();
+            targetLanguages.ToList().ForEach(config.AddTargetLanguage);
 
             using var audioInput = AudioConfig.FromStreamInput(
                 AudioInputStream.CreatePullStream(
@@ -36,6 +49,7 @@
                             wavBytes))));
 
             using var recognizer = new TranslationRecognizer(config, audioInput);
+            var stopTranslation = new TaskCompletionSource<int>();
 
             recognizer.Recognizing += (s, e) =>
             {
@@ -45,7 +59,6 @@
                     Console.WriteLine($"    TRANSLATING into '{element.Key}': {element.Value}");
                 }
             };
-            // DE/FR/EN
 
             recognizer.Recognized += (s, e) => {
                 if (e.Result.Reason == ResultReason.TranslatedSpeech)
@@ -93,21 +106,30 @@
             recognizer.OnSynthesisWriteToFile(outputFilename);
 
             // Starts continuous recognition. Uses StopContinuousRecognitionAsync() to stop recognition.
-            Console.WriteLine("Start translation...");
             await recognizer.StartContinuousRecognitionAsync().ConfigureAwait(false);
 
             await Task.WhenAny(new[] { stopTranslation.Task });
 
             // Stops translation.
-            await recognizer.StopContinuousRecognitionAsync().ConfigureAwait(false);
+            await recognizer.StopContinuousRecognitionAsync().ConfigureAwait(continueOnCapturedContext: false);
         }
 
-        public static void OnSynthesisWriteToFile(this TranslationRecognizer recognizer, string filename)
+        public static void OnSynthesisWriteToFile(this TranslationRecognizer recognizer, string outputFilename)
         {
             recognizer.Synthesizing += (s, e) => {
                 byte[] audioBytes = e.Result.GetAudio();
-                using var fs = File.OpenWrite(filename);
-                fs.Write(audioBytes, 0, audioBytes.Length);
+                if (audioBytes.Length == 0) { return; }
+
+                if (outputFilename.EndsWith(".wav"))
+                {
+                    using var fs = File.OpenWrite(outputFilename);
+                    fs.Write(audioBytes, 0, audioBytes.Length);
+                }
+                else
+                {
+                    using var ms = new MemoryStream(audioBytes);
+                    ms.SaveWavToMp3File(outputFilename);
+                }
             };
         }
     }

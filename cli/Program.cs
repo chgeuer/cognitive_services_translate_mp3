@@ -13,19 +13,16 @@
                 Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), 
                 "Soundaufnahmen", n);
             var inputFilename = fullPath("input.mp3");
-            var outputFilename = fullPath("translated.wav");
+            var outputFilename = fullPath("res.mp3");
 
             var subscriptionKey = Environment.GetEnvironmentVariable("SPEECH_API_KEY");
             var region = Environment.GetEnvironmentVariable("SPEECH_API_REGION");
 
-            using var mp3stream = File.OpenRead(inputFilename);
-
-            await CognitiveExtensions.Translate(mp3stream, subscriptionKey, region,
-                outputFilename, Mp3ConversionAlgorithm.FFMPEG);
-
-            //using var wavStream = File.OpenRead(fullPath("translated.wav"));
-            //var mp3bytes = await wavStream.ConvertWAV2MP3_NAudio();
-            //await File.WriteAllBytesAsync(fullPath("translated.mp3"), mp3bytes);
+            await CognitiveExtensions.Translate(subscriptionKey: subscriptionKey, region: region, 
+                inputFilename: inputFilename, fromLanguage: "en-US",
+                targetLanguages: new[] { "en", "de" },
+                voice: Voice.de_DE_Stefan_Apollo,
+                outputFilename: outputFilename);
         }
     }
 }
