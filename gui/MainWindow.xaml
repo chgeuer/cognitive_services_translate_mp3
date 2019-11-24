@@ -5,10 +5,23 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:wpfcore"
         mc:Ignorable="d"
-        Title="Microsoft Cognitive Services Translator Demo" Height="450" Width="800">
-    <Grid>
-        <ListBox x:Name="l" AllowDrop="True" Drop="OnDrop">
-            
-        </ListBox>
+        Title="Microsoft Cognitive Services Translator Demo"
+        Height="450" Width="800"
+        FontSize="16">
+    <Grid Margin="5">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"></RowDefinition>
+        </Grid.RowDefinitions>
+        <StackPanel Grid.Row="0" Grid.Column="0" 
+                    x:Name ="settingsPanel" 
+                    Orientation="Vertical" 
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Stretch">
+            <Label>MP3 files to convert:</Label>
+            <ListBox x:Name="l"
+                     VerticalAlignment="Center"
+                     MinHeight="200"
+                     AllowDrop="True" Drop="OnDrop" />
+        </StackPanel>
     </Grid>
 </Window>
