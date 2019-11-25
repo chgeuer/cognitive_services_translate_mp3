@@ -17,6 +17,13 @@
                 <ComboBoxItem Tag="eastasia">East Asia</ComboBoxItem>
             </ComboBox>
         </GroupBox>
+        <GroupBox Header="Target Languages" >
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+                <CheckBox Content="EN" IsChecked="True"></CheckBox>
+                <CheckBox Content="DE" IsChecked="True"></CheckBox>
+                <CheckBox Content="FR" IsChecked="True"></CheckBox>
+            </StackPanel>
+        </GroupBox>
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
             <Button>Cancel</Button>
             <Button>OK</Button>
