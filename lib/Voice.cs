@@ -8,11 +8,11 @@
         public static Voice From(string s) => new Voice(s);
 
         // https://docs.microsoft.com/en-us/azure/cognitive-services/speech-service/language-support
-        public static Voice de_DE_KatjaNeural { get; } = Voice.From("Microsoft Server Speech Text to Speech Voice (de-DE, KatjaNeural)");
-        public static Voice en_US_GuyNeural { get; } = Voice.From("Microsoft Server Speech Text to Speech Voice (en-US, GuyNeural)");
-        public static Voice en_US_JessaNeural { get; } = Voice.From("Microsoft Server Speech Text to Speech Voice (en-US, JessaNeural)");
-        public static Voice it_IT_ElsaNeural { get; } = Voice.From("Microsoft Server Speech Text to Speech Voice (it-IT, ElsaNeural)");
-        public static Voice zh_CN_XiaoxiaoNeural { get; } = Voice.From("Microsoft Server Speech Text to Speech Voice (zh-CN, XiaoxiaoNeural)");
+        //public static Voice de_DE_KatjaNeural { get; } = Voice.From("Microsoft Server Speech Text to Speech Voice (de-DE, KatjaNeural)");
+        //public static Voice en_US_GuyNeural { get; } = Voice.From("Microsoft Server Speech Text to Speech Voice (en-US, GuyNeural)");
+        //public static Voice en_US_JessaNeural { get; } = Voice.From("Microsoft Server Speech Text to Speech Voice (en-US, JessaNeural)");
+        //public static Voice it_IT_ElsaNeural { get; } = Voice.From("Microsoft Server Speech Text to Speech Voice (it-IT, ElsaNeural)");
+        //public static Voice zh_CN_XiaoxiaoNeural { get; } = Voice.From("Microsoft Server Speech Text to Speech Voice (zh-CN, XiaoxiaoNeural)");
 
         public static Voice ar_EG_Hoda { get; } = Voice.From("Microsoft Server Speech Text to Speech Voice (ar-EG, Hoda)");
         public static Voice ar_SA_Naayf { get; } = Voice.From("Microsoft Server Speech Text to Speech Voice (ar-SA, Naayf)");
