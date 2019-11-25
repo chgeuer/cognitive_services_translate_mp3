@@ -8,20 +8,22 @@
         Title="Microsoft Cognitive Services Translator Demo"
         Height="450" Width="800"
         FontSize="16">
-    <Grid Margin="5">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="*"></RowDefinition>
-        </Grid.RowDefinitions>
-        <StackPanel Grid.Row="0" Grid.Column="0" 
-                    x:Name ="settingsPanel" 
-                    Orientation="Vertical" 
-                    HorizontalAlignment="Stretch"
-                    VerticalAlignment="Stretch">
-            <Label>MP3 files to convert:</Label>
-            <ListBox x:Name="l"
-                     VerticalAlignment="Center"
-                     MinHeight="200"
-                     AllowDrop="True" Drop="OnDrop" />
-        </StackPanel>
-    </Grid>
+
+    <DockPanel>
+        <Menu DockPanel.Dock="Top">
+            <MenuItem Header="_File">
+                <MenuItem Header="_Add files"/>
+                <MenuItem Header="_Settings"></MenuItem>
+                <Separator />
+                <MenuItem Header="_Exit" Click="MenuItem_Exit"/>
+            </MenuItem>
+            <MenuItem Header="_Conversion">
+                <MenuItem Header="_Start" IsEnabled="{Binding StartEnabled}"/>
+                <MenuItem Header="_Cancel"  IsEnabled="{Binding CancelEnabled}"></MenuItem>
+            </MenuItem>
+        </Menu>
+        <GroupBox Grid.Row="1" Grid.Column="0"  Header="MP3 files to convert">
+            <ListBox x:Name="l" AllowDrop="True" Drop="OnDrop" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"  />
+        </GroupBox>
+    </DockPanel>
 </Window>

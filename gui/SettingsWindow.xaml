@@ -1,0 +1,25 @@
+﻿<Window x:Class="gui.SettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:gui"
+        mc:Ignorable="d"
+        Title="Settings">
+    <StackPanel Orientation="Vertical">
+        <GroupBox Header="Subscription Key">
+            <TextBox x:Name="subscriptionKey" Width="300"></TextBox>
+        </GroupBox>
+        <GroupBox Header="Datacenter Region">
+            <ComboBox x:Name="regionComboBox" Text="Select Region" >
+                <ComboBoxItem Tag="northeurope" IsSelected="true">North Europe</ComboBoxItem>
+                <ComboBoxItem Tag="westus">West US</ComboBoxItem>
+                <ComboBoxItem Tag="eastasia">East Asia</ComboBoxItem>
+            </ComboBox>
+        </GroupBox>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button>Cancel</Button>
+            <Button>OK</Button>
+        </StackPanel>
+    </StackPanel>
+</Window>

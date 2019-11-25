@@ -7,12 +7,34 @@ namespace wpfcore
 {
     using System;
     using System.Collections.Generic;
+    using System.ComponentModel;
     using System.IO;
     using System.Linq;
+    using System.Threading;
     using System.Windows;
 
     public partial class MainWindow : Window
     {
+        private CancellationTokenSource cancelTokenSource;
+        private bool startEnabled = true;
+        private bool cancelEnabled = false;
+
+        public event PropertyChangedEventHandler PropertyChanged;
+        private void RaisePropertyChanged(string name) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+
+        public bool StartEnabled
+        {
+            get { return startEnabled; }
+            set { if (startEnabled != value) { startEnabled = value; RaisePropertyChanged("StartEnabled"); } }
+        }
+
+        public bool CancelEnabled
+        {
+            get { return cancelEnabled; }
+            set { if (cancelEnabled != value) { cancelEnabled = value; RaisePropertyChanged("CancelEnabled"); } }
+        }
+
+
         public MainWindow()
         {
             InitializeComponent();
@@ -41,6 +63,11 @@ namespace wpfcore
                         break;
                 }
             }
+        }
+
+        private void MenuItem_Exit(object sender, RoutedEventArgs e)
+        {
+            Application.Current.Shutdown();
         }
     }
 
