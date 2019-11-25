@@ -12,16 +12,17 @@
             static string fullPath(string n) => Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), 
                 "Soundaufnahmen", n);
-            var inputFilename = fullPath("input.mp3");
-            var outputFilename = fullPath("res.mp3");
+            var inputFilename = fullPath("1.mp3");
+            var outputFilename = fullPath("result-{}.mp3");
 
             var subscriptionKey = Environment.GetEnvironmentVariable("SPEECH_API_KEY");
             var region = Environment.GetEnvironmentVariable("SPEECH_API_REGION");
 
             await CognitiveExtensions.Translate(subscriptionKey: subscriptionKey, region: region, 
-                inputFilename: inputFilename, fromLanguage: "en-US",
-                targetLanguages: new[] { "en", "de" },
-                voice: Voice.de_DE_Stefan_Apollo,
+                inputFilename: inputFilename, 
+                fromLanguage: "en-US",
+                targetLanguages: new[] { "en", "de", "it" },
+                voice: Voice.en_GB_George_Apollo,
                 outputFilename: outputFilename);
         }
     }

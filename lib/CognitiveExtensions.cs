@@ -38,6 +38,8 @@
 
         public static async Task TranslationWithFileAsync(this SpeechTranslationConfig config, byte[] wavBytes, string fromLanguage, IEnumerable<string> targetLanguages, Voice voice, string outputFilename)
         {
+            var synthesizingWriter = new SynthesizingWriter(outputFilename);
+
             config.SpeechRecognitionLanguage = fromLanguage;
             config.VoiceName = voice.ToString();
             targetLanguages.ToList().ForEach(config.AddTargetLanguage);
@@ -103,7 +105,7 @@
                 stopTranslation.TrySetResult(0);
             };
 
-            recognizer.OnSynthesisWriteToFile(outputFilename);
+            recognizer.Synthesizing += synthesizingWriter.Synthesizing;
 
             // Starts continuous recognition. Uses StopContinuousRecognitionAsync() to stop recognition.
             await recognizer.StartContinuousRecognitionAsync().ConfigureAwait(false);
@@ -112,25 +114,6 @@
 
             // Stops translation.
             await recognizer.StopContinuousRecognitionAsync().ConfigureAwait(continueOnCapturedContext: false);
-        }
-
-        public static void OnSynthesisWriteToFile(this TranslationRecognizer recognizer, string outputFilename)
-        {
-            recognizer.Synthesizing += (s, e) => {
-                byte[] audioBytes = e.Result.GetAudio();
-                if (audioBytes.Length == 0) { return; }
-
-                if (outputFilename.EndsWith(".wav"))
-                {
-                    using var fs = File.OpenWrite(outputFilename);
-                    fs.Write(audioBytes, 0, audioBytes.Length);
-                }
-                else
-                {
-                    using var ms = new MemoryStream(audioBytes);
-                    ms.SaveWavToMp3File(outputFilename);
-                }
-            };
         }
     }
 }

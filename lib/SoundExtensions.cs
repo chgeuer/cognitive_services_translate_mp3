@@ -12,6 +12,11 @@
         const int audio_channels = 1;
         const int desiredMP3bitRate = 48000;
 
+        /// <summary>
+        /// MP3 to WAV conversion.
+        /// </summary>
+        /// <param name="mp3Stream"></param>
+        /// <returns></returns>
         public static byte[] ConvertMP3(this Stream mp3Stream)
         {
             using var reader = new Mp3FileReader(mp3Stream);
@@ -26,6 +31,11 @@
             return wavStream.ToArray();
         }
 
+        /// <summary>
+        /// Converts WAV content to MP3.
+        /// </summary>
+        /// <param name="wavStream"></param>
+        /// <param name="mp3ResultFile"></param>
         public static void SaveWavToMp3File(this Stream wavStream, string mp3ResultFile)
         {
             MediaFoundationApi.Startup();
@@ -62,19 +72,19 @@
         //            $"Unsupported bits_per_sample {audio_bit_per_sample}",
         //            paramName: nameof(audio_bit_per_sample)),
         //    };
-
+        //
         //    string readFromStdin = "-i -";
         //    string produceWAV = $"-f wav -c:a {audio_codec}";
         //    string audioParams = $"-ar {audio_sample_rate} -ac {audio_channels}";
         //    string writeToStdout = "-";
         //    string ffmpeg_args = $"{readFromStdin} {produceWAV} {audioParams} {writeToStdout}";
-
+        //
         //    var result = await ProcessExtensions.RunAsync("ffmpeg", ffmpeg_args, mp3Stream);
         //    var log = System.Text.Encoding.UTF8.GetString(result.Stderr);
-
-        //    return result.Stdout; // .TweakWavLength();
+        //
+        //    return result.Stdout; //.TweakWavLength();
         //}
-
+        //
         //private static async Task<byte[]> ConvertWAV2MP3_FFMPEG(this Stream stream)
         //{
         //    var audio_codec = "mp3";
@@ -86,14 +96,14 @@
         //    var log = System.Text.Encoding.UTF8.GetString(result.Stderr);
         //    return result.Stdout;
         //}
-
+        //
         //private static byte[] CloneArray(this byte[] array)
         //{
         //    byte[] result = new byte[array.Length];
         //    Buffer.BlockCopy(array, 0, result, 0, array.Length * sizeof(byte));
         //    return result;
         //}
-
+        //
         //private static byte[] TweakWavLength(this byte[] wavByteArray)
         //{
         //    // un-fuck the WAV length...
