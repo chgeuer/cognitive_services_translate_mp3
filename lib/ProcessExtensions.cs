@@ -1,4 +1,4 @@
-﻿namespace lib
+namespace lib
 {
     using System;
     using System.Collections.Generic;
